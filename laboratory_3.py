@@ -1,30 +1,13 @@
 import json
-import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.cluster import KMeans
-from sklearn.decomposition import PCA
-import requests
-from bs4 import BeautifulSoup
 import re
 
-menu = [
-    "Пицца", "Карбонара", "Болоньезе", "Лазанья", "Ризотто",
-    "Чак-чак", "Губадия", "Эчпочмак", "Кыстыбый", "Хворост",
-    "Кимчи", "Том-ям", "Рис", "Соба", "Креветки", "Пад-тай",
-    "Шаурма", "Пельмени", "Борщ", "Суши", "Стейк", "Рамен",
-    "Фалафель", "Хачапури", "Гамбургер", "Сэндвич", "Мясо", "Рыба",
-    "Курица", "Суп-пюре", "Салат", "Суп", "Каша"
-]
-sources = {
-    "Perm": "https://59.ru/text?rubric=food",
-    "Kazan": "https://116.ru/text?rubric=food",
-    "Ekaterinburg": "https://www.e1.ru/text?rubric=food",
-    "Moscow": "https://msk1.ru/text?rubric=food",
-    "Tyumen": "https://72.ru/text?rubric=food",
-    "Vladivostok": "https://vladivostok1.ru/text?rubric=food",
-    "Novosibirsk": "https://ngs.ru/text/?rubric=food"
-}
+import matplotlib.pyplot as plt
+import pandas as pd
+import requests
+import seaborn as sns
+from bs4 import BeautifulSoup
+from sklearn.cluster import KMeans
+from sklearn.decomposition import PCA
 
 
 def get_links_page(response):
@@ -41,7 +24,7 @@ def load_file(name):
         return json.load(file)
 
 
-def processing_pages():
+def processing_pages(sources, menu):
     data = {}
     for source in sources:
         for page_count in range(1, 10):
@@ -61,20 +44,50 @@ def processing_pages():
     return data
 
 
-df = processing_pages()
-# df = load_file("zzzzzzzzzzzzzz.json")
-df = pd.DataFrame(df).T
-kmeans = KMeans(n_clusters=3, random_state=0, n_init=10).fit(df)
-df["KMeans_Cluster"] = kmeans.labels_
-pca = PCA(n_components=2)
-df_with_pca = pca.fit_transform(df.drop("KMeans_Cluster", axis=1))
-df_with_pca = pd.DataFrame(df_with_pca, columns=["PCA_1", "PCA_2"])
-df_with_pca["KMeans_Cluster"] = df["KMeans_Cluster"].values
-city_names = df.index
-df_with_pca["City"] = city_names
-plt.figure()
-sns.scatterplot(data=df_with_pca, x="PCA_1", y="PCA_2", hue="KMeans_Cluster")
-for i in range(len(df_with_pca)):
-    plt.text(df_with_pca.PCA_1[i], df_with_pca.PCA_2[i], df_with_pca.City[i])
-plt.savefig("KMeans_Clusters.png")
-print(df.drop("KMeans_Cluster", axis=1).idxmax(axis=1))
+def clustering_view(df):
+    kmeans = KMeans(n_clusters=3, random_state=0, n_init=10).fit(df)
+    df["KMeans_Cluster"] = kmeans.labels_
+    pca = PCA(n_components=2)
+    df_with_pca = pca.fit_transform(df.drop("KMeans_Cluster", axis=1))
+    df_with_pca = pd.DataFrame(df_with_pca, columns=["PCA_1", "PCA_2"])
+    df_with_pca["KMeans_Cluster"] = df["KMeans_Cluster"].values
+    city_names = df.index
+    df_with_pca["City"] = city_names
+    plt.figure()
+    sns.scatterplot(data=df_with_pca, x="PCA_1", y="PCA_2", hue="KMeans_Cluster")
+    for i in range(len(df_with_pca)):
+        plt.text(df_with_pca.PCA_1[i], df_with_pca.PCA_2[i], df_with_pca.City[i])
+    plt.savefig("KMeans_Clusters.png")
+
+
+def popular_dishes(df):
+    print(df.drop("KMeans_Cluster", axis=1).idxmax(axis=1))
+
+
+def main():
+    menu = [
+        "Пицца", "Карбонара", "Болоньезе", "Лазанья", "Ризотто",
+        "Чак-чак", "Губадия", "Эчпочмак", "Кыстыбый", "Хворост",
+        "Кимчи", "Том-ям", "Рис", "Соба", "Креветки", "Пад-тай",
+        "Шаурма", "Пельмени", "Борщ", "Суши", "Стейк", "Рамен",
+        "Фалафель", "Хачапури", "Гамбургер", "Сэндвич", "Мясо", "Рыба",
+        "Курица", "Суп-пюре", "Салат", "Суп", "Каша"
+    ]
+    sources = {
+        "Perm": "https://59.ru/text?rubric=food",
+        "Kazan": "https://116.ru/text?rubric=food",
+        "Ekaterinburg": "https://www.e1.ru/text?rubric=food",
+        "Moscow": "https://msk1.ru/text?rubric=food",
+        "Tyumen": "https://72.ru/text?rubric=food",
+        "Vladivostok": "https://vladivostok1.ru/text?rubric=food",
+        "Novosibirsk": "https://ngs.ru/text/?rubric=food"
+    }
+    # data = processing_pages(sources, menu)
+    data = load_file("zzzzzzzzzzzzzz.json")
+    df = pd.DataFrame(data).T
+    clustering_view(df)
+    popular_dishes(df)
+
+
+if __name__ == "__main__":
+    main()
