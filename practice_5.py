@@ -22,7 +22,6 @@ def yt_download(url, path):
 def reddit_download(url, path):
     response = requests.get(url + ".json")
     data = response.json()
-    print(data)
     for video in data["data"]["children"]:
         if "secure_media" in video["data"] and video["data"]["secure_media"] is not None:
             if "reddit_video" in video["data"]["secure_media"]:
@@ -47,7 +46,13 @@ def mkdir(path):
         os.makedirs(path)
 
 
-process([
-    "https://www.youtube.com/watch?v=ex9tML6udCU",
-    "https://www.reddit.com/r/videomemes"
-])
+def main():
+    sources = [
+        "https://www.youtube.com/watch?v=ex9tML6udCU",
+        "https://www.reddit.com/r/videomemes"
+    ]
+    process(sources)
+
+
+if __name__ == "__main__":
+    main()
